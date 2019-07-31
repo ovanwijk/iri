@@ -17,9 +17,9 @@ import com.iota.iri.service.tipselection.RatingCalculator;
 import com.iota.iri.storage.Tangle;
 
 /**
- * Implementation of {@link RatingCalculator} that calculates the cumulative weight 
+ * Implementation of {@link RatingCalculator} that calculates the cumulative weight
  * Calculates the weight recursively/on the fly for each transaction referencing {@code entryPoint}. <br>
- * Works using DFS search for new hashes and a BFS calculation. 
+ * Works using DFS search for new hashes and a BFS calculation.
  * Uses cached values to prevent double database lookup for approvers
  */
 public class CumulativeWeightCalculator implements RatingCalculator {
@@ -29,7 +29,7 @@ public class CumulativeWeightCalculator implements RatingCalculator {
 
     /**
      * Constructor for Cumulative Weight Calculator
-     * 
+     *
      * @param tangle Tangle object which acts as a database interface
      * @param snapshotProvider accesses ledger's snapshots
      */
@@ -41,14 +41,14 @@ public class CumulativeWeightCalculator implements RatingCalculator {
     @Override
     public Map<Hash, Integer> calculate(Hash entryPoint) throws Exception {
         Map<Hash, Integer> hashWeightMap = calculateRatingDfs(entryPoint);
-        
+
         return hashWeightMap;
     }
-    
+
     private Map<Hash, Integer> calculateRatingDfs(Hash entryPoint) throws Exception {
         TransactionViewModel tvm = TransactionViewModel.fromHash(tangle, entryPoint);
-        int depth = tvm.snapshotIndex() > 0 
-                ? snapshotProvider.getLatestSnapshot().getIndex() - tvm.snapshotIndex() + 1 
+        int depth = tvm.snapshotIndex() > 0
+                ? snapshotProvider.getLatestSnapshot().getIndex() - tvm.snapshotIndex() + 1
                 : 1;
 
         // Estimated capacity per depth, assumes 5 minute gap in between milestones, at 3tps
@@ -63,7 +63,7 @@ public class CumulativeWeightCalculator implements RatingCalculator {
             Hash txHash = stack.pollLast();
 
             Set<Hash> approvers = getTxDirectApproversHashes(txHash, txToDirectApprovers);
-            
+
             // If its empty, its a tip!
             if (approvers.isEmpty()) {
                 hashWeightMap.put(txHash, 1);
@@ -76,13 +76,13 @@ public class CumulativeWeightCalculator implements RatingCalculator {
                         stack.add(h);
                     }
                 }
-                
+
                 // Add the tx to the approvers list to count itself as +1 weight, preventing self-referencing
                 approvers.add(txHash);
-                
+
                 // calculate and add rating. Naturally the first time all approvers need to be looked up. Then its cached.
                 hashWeightMap.put(txHash, getRating(approvers, txToDirectApprovers));
-            } 
+            }
         }
 
         // If we have a self-reference, its already added, otherwise we save a big calculation
@@ -94,8 +94,8 @@ public class CumulativeWeightCalculator implements RatingCalculator {
 
     /**
      * Gets the rating of a set, calculated by checking its approvers
-     * 
-     * @param startingSet All approvers of a certain hash, including the hash itself. 
+     *
+     * @param startingSet All approvers of a certain hash, including the hash itself.
      *                    Should always start with at least 1 hash.
      * @param txToDirectApproversCache The cache of approvers, used to prevent double db lookups
      * @return The weight, or rating, of the starting hash
@@ -114,10 +114,10 @@ public class CumulativeWeightCalculator implements RatingCalculator {
 
         return startingSet.size();
     }
-    
+
     /**
      * Finds the approvers of a transaction, and adds it to the txToDirectApprovers map if they weren't there yet.
-     * 
+     *
      * @param txHash The tx we find the approvers of
      * @param txToDirectApprovers The map we look in, and add to
      * @param fallback The map we check in before going in the database, can be <code>null</code>
@@ -126,7 +126,7 @@ public class CumulativeWeightCalculator implements RatingCalculator {
      */
     private Set<Hash> getTxDirectApproversHashes(Hash txHash, Map<Hash, Set<Hash>> txToDirectApprovers)
             throws Exception {
-        
+
         Set<Hash> txApprovers = txToDirectApprovers.get(txHash);
         if (txApprovers == null) {
             ApproveeViewModel approvers = ApproveeViewModel.load(tangle, txHash);
@@ -136,7 +136,7 @@ public class CumulativeWeightCalculator implements RatingCalculator {
             } else {
                 appHashes = approvers.getHashes();
             }
-            
+
             txApprovers = new HashSet<>(appHashes.size());
             for (Hash appHash : appHashes) {
                 // if not genesis (the tx that confirms itself)
@@ -146,10 +146,10 @@ public class CumulativeWeightCalculator implements RatingCalculator {
             }
             txToDirectApprovers.put(txHash, txApprovers);
         }
-        
+
         return new HashSet<Hash>(txApprovers);
     }
-    
+
     private static Map<Hash, Integer> createTxHashToCumulativeWeightMap(int size) {
         return new HashMap<Hash, Integer>(size); //new TransformingMap<>(size, HashPrefix::createPrefix, null);
     }

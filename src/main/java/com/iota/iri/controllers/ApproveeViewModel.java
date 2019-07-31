@@ -50,6 +50,9 @@ public class ApproveeViewModel implements HashesViewModel {
     public static ApproveeViewModel load(Tangle tangle, Indexable hash) throws Exception {
         return new ApproveeViewModel((Approvee) tangle.load(Approvee.class, hash), hash);
     }
+    public static ApproveeViewModel loadExternal(Tangle tangle, Indexable hash) throws Exception {
+        return new ApproveeViewModel((Approvee) tangle.loadExternal(Approvee.class, hash), hash);
+    }
 
     /**
      * Fetches the first persistable {@link Approvee} set from the database and generates a new

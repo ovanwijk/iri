@@ -48,6 +48,7 @@ import com.iota.iri.storage.Indexable;
 import com.iota.iri.storage.Persistable;
 import com.iota.iri.storage.PersistenceProvider;
 import com.iota.iri.storage.Tangle;
+import com.iota.iri.storage.couchbase.CouchbasePersistenceProvider;
 import com.iota.iri.storage.rocksDB.RocksDBPersistenceProvider;
 import com.iota.iri.utils.Pair;
 import com.iota.iri.zmq.ZmqMessageQueueProvider;
@@ -323,11 +324,30 @@ public class Iota {
         if (configuration.isZmqEnabled()) {
             tangle.addMessageQueueProvider(new ZmqMessageQueueProvider(configuration));
         }
+        if(configuration.isCouchBaseEnabled()){
+            tangle.addExternalPersistenceProvider(new CouchbasePersistenceProvider(
+                    configuration.getCouchbaseNodes(),
+                    configuration.getCouchbaseUsername(),
+                    configuration.getCouchbasePassword(),
+                    true,
+                    configuration.getDbLogPath(),
+                    configuration.getTxBucketName(),
+                    configuration.getMetdataBucketName()
+
+            ));
+
+//            tangle.addExternalPersistenceProvider(new CouchbasePersistenceProvider(
+//                    new String[]{"10.0.1.175", "192.168.1.102"},
+//                    "iri", "testiri",
+//                    true, configuration.getDbLogPath(), "tx_bucket", "tx_metadata"
+//
+//            ));
+        }
+
     }
-    
     /**
      * Creates a new Persistable provider with the supplied settings
-     * 
+     *
      * @param path The location where the database will be stored
      * @param log The location where the log files will be stored
      * @param cacheSize the size of the cache used by the database implementation
@@ -335,7 +355,7 @@ public class Iota {
      * @param metadata Map of metadata used by the Persistable class, can be <code>null</code>
      * @return A new Persistance provider
      */
-    private PersistenceProvider createRocksDbProvider(String path, String log, int cacheSize, 
+    private PersistenceProvider createRocksDbProvider(String path, String log, int cacheSize,
             Map<String, Class<? extends Persistable>> columnFamily,
             Map.Entry<String, Class<? extends Persistable>> metadata) {
         return new RocksDBPersistenceProvider(

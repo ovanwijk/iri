@@ -51,6 +51,10 @@ public class AddressViewModel implements HashesViewModel {
         return new AddressViewModel((Address) tangle.load(Address.class, hash), hash);
     }
 
+    public static AddressViewModel loadExternal(Tangle tangle, Indexable hash) throws Exception {
+        return new AddressViewModel((Address) tangle.loadExternal(Address.class, hash), hash);
+    }
+
     /**
      * Fetches the first persistable {@link Address} set from the database and generates a new {@link AddressViewModel}
      * from it. If no {@link Address} sets exist in the database, it will return null.

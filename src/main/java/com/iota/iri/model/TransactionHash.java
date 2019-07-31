@@ -6,7 +6,7 @@ import com.iota.iri.utils.Converter;
 
 /**
  * Creates a <tt>Transaction</tt> Hash identifier.
- * 
+ *
  * <p>
  *     A transaction hash acts as a reference point for a transaction object.
  * </p>

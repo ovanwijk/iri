@@ -35,28 +35,28 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class SpentAddressesProviderImplTest {
-    
+
     private static final Hash A = TransactionTestUtils.getTransactionHash();
     private static final Hash B = TransactionTestUtils.getTransactionHash();
-    
-    @Rule 
+
+    @Rule
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-    
+
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private SnapshotConfig config;
-    
+
     @Mock
     private PersistenceProvider persistenceProvider;
-    
+
     private SpentAddressesProviderImpl provider;
-    
+
     @Before
     public void setUp() throws Exception {
         when(config.isTestnet()).thenReturn(true);
-        
+
         provider = new SpentAddressesProviderImpl();
         provider.init(config, this.persistenceProvider, false);
     }
@@ -70,7 +70,7 @@ public class SpentAddressesProviderImplTest {
     public void testContainsAddress() throws Exception {
         when(persistenceProvider.exists(SpentAddress.class, A)).thenReturn(true);
         when(persistenceProvider.exists(SpentAddress.class, B)).thenReturn(false);
-        
+
         assertTrue("Provider should have A as spent", provider.containsAddress(A));
         assertFalse("Provider should not have B as spent", provider.containsAddress(B));
     }
@@ -78,7 +78,7 @@ public class SpentAddressesProviderImplTest {
     @Test
     public void testSaveAddress() throws Exception {
         provider.saveAddress(A);
-        
+
         try {
             verify(persistenceProvider, times(1)).save(any(SpentAddress.class), Mockito.eq(A));
         } catch (MockitoAssertionError e) {
@@ -92,9 +92,9 @@ public class SpentAddressesProviderImplTest {
            add(A);
            add(B);
         }};
-        
+
         provider.saveAddressesBatch(addresses);
-        
+
         ArgumentMatcher<List<Pair<Indexable, Persistable>>> matcher = new ArgumentMatcher<List<Pair<Indexable,Persistable>>>() {
 
             @Override
@@ -102,7 +102,7 @@ public class SpentAddressesProviderImplTest {
                 return list.size() == 2;
             }
         };
-        
+
         try {
             verify(persistenceProvider, times(1)).saveBatch(Mockito.argThat(matcher));
         } catch (MockitoAssertionError e) {

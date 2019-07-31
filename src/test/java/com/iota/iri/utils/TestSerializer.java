@@ -15,11 +15,11 @@ public class TestSerializer {
         for (long l : ltestvec) {
 			Assert.assertArrayEquals(Serializer.serialize(l), bbSerialize(l));
         }
-		
+
         for (int i : itestvec) {
 			Assert.assertArrayEquals(Serializer.serialize(i), bbSerialize(i));
         }
-		
+
 	}
 	
 	// reference for original bytebuffer code

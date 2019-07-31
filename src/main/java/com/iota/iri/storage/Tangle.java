@@ -41,10 +41,14 @@ public class Tangle {
             new AbstractMap.SimpleImmutableEntry<>("transaction-metadata", Transaction.class);
 
     private final List<PersistenceProvider> persistenceProviders = new ArrayList<>();
+    private final List<PersistenceProvider> externalPersistenceProviders = new ArrayList<>();
     private final List<MessageQueueProvider> messageQueueProviders = new ArrayList<>();
 
     public void addPersistenceProvider(PersistenceProvider provider) {
         this.persistenceProviders.add(provider);
+    }
+    public void addExternalPersistenceProvider(PersistenceProvider provider) {
+        this.externalPersistenceProviders.add(provider);
     }
 
     /**
@@ -59,6 +63,9 @@ public class Tangle {
         for(PersistenceProvider provider: this.persistenceProviders) {
             provider.init();
         }
+        for(PersistenceProvider provider: this.externalPersistenceProviders) {
+            provider.init();
+        }
     }
 
     public void shutdown() throws Exception {
@@ -70,14 +77,27 @@ public class Tangle {
         this.messageQueueProviders.clear();
     }
 
-    public Persistable load(Class<?> model, Indexable index) throws Exception {
-            Persistable out = null;
-            for(PersistenceProvider provider: this.persistenceProviders) {
-                if((out = provider.get(model, index)) != null) {
-                    break;
-                }
+    public Persistable loadExternal(Class<?> model, Indexable index) throws Exception {
+        Persistable out = null;
+        for(PersistenceProvider provider: this.externalPersistenceProviders) {
+            if((out = provider.get(model, index)) != null) {
+                break;
             }
-            return out;
+        }
+        if(out == null){
+            return load(model, index);
+        }
+        return out;
+    }
+
+    public Persistable load(Class<?> model, Indexable index) throws Exception {
+        Persistable out = null;
+        for(PersistenceProvider provider: this.persistenceProviders) {
+            if((out = provider.get(model, index)) != null) {
+                break;
+            }
+        }
+        return out;
     }
 
     public Boolean saveBatch(List<Pair<Indexable, Persistable>> models) throws Exception {
@@ -89,6 +109,15 @@ public class Tangle {
                 exists = provider.saveBatch(models);
             }
         }
+
+//        for(PersistenceProvider provider: externalPersistenceProviders) {
+//            if(exists) {
+//                provider.saveBatch(models);
+//            } else {
+//                exists = provider.saveBatch(models);
+//            }
+//        }
+
         return exists;
     }
     public Boolean save(Persistable model, Indexable index) throws Exception {
@@ -98,6 +127,14 @@ public class Tangle {
                     provider.save(model, index);
                 } else {
                    exists = provider.save(model, index);
+                }
+            }
+
+            for(PersistenceProvider provider: externalPersistenceProviders) {
+                if(exists) {
+                    provider.save(model, index);
+                } else {
+                    exists = provider.save(model, index);
                 }
             }
             return exists;
@@ -141,6 +178,13 @@ public class Tangle {
     private void updatePersistenceProvider(Persistable model, Indexable index, String item) throws Exception {
         for(PersistenceProvider provider: this.persistenceProviders) {
                 provider.update(model, index, item);
+        }
+        for(PersistenceProvider provider: this.externalPersistenceProviders) {
+         //   if(success) {
+                provider.update(model, index, item);
+            //} else {
+           //     success = provider.update(model, index, item);
+           // }
         }
     }
 

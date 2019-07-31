@@ -4,9 +4,11 @@ import com.iota.iri.crypto.SpongeFactory;
 import com.iota.iri.model.Hash;
 import com.iota.iri.model.HashFactory;
 import com.iota.iri.utils.IotaUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,9 +32,9 @@ public abstract class BaseIotaConfig implements IotaConfig {
 
     private boolean help;
     private boolean testnet = false;
-    
+
     //API
-    protected int port = Defaults.PORT;
+    protected int port = Defaults.API_PORT;
     protected String apiHost = Defaults.API_HOST;
     protected List<String> remoteLimitApi = Defaults.REMOTE_LIMIT_API;
     protected List<InetAddress> remoteTrustedApiHosts = Defaults.REMOTE_LIMIT_API_HOSTS;
@@ -41,7 +43,7 @@ public abstract class BaseIotaConfig implements IotaConfig {
     protected int maxGetTrytes = Defaults.MAX_GET_TRYTES;
     protected int maxBodyLength = Defaults.MAX_BODY_LENGTH;
     protected String remoteAuth = Defaults.REMOTE_AUTH;
-    
+
     //We don't have a REMOTE config but we have a remote flag. We must add a field for JCommander
     private boolean remote;
 
@@ -131,12 +133,12 @@ public abstract class BaseIotaConfig implements IotaConfig {
     public boolean isHelp() {
         return help;
     }
-    
+
     @Override
     public boolean isTestnet() {
         return testnet;
     }
-    
+
     @JsonIgnore
     @Parameter(names = {Config.TESTNET_FLAG}, description = Config.Descriptions.TESTNET, arity = 1)
     protected void setTestnet(boolean testnet) {
@@ -165,7 +167,7 @@ public abstract class BaseIotaConfig implements IotaConfig {
         if (remote) {
             return "0.0.0.0";
         }
-        
+
         return apiHost;
     }
 
@@ -801,7 +803,7 @@ public abstract class BaseIotaConfig implements IotaConfig {
     }
 
     @JsonProperty
-    @Parameter(names = "--max-analyzed-transactions", 
+    @Parameter(names = "--max-analyzed-transactions",
         description = TipSelConfig.Descriptions.BELOW_MAX_DEPTH_TRANSACTION_LIMIT)
     protected void setBelowMaxDepthTransactionLimit(int maxAnalyzedTransactions) {
         this.maxAnalyzedTransactions = maxAnalyzedTransactions;
@@ -818,9 +820,71 @@ public abstract class BaseIotaConfig implements IotaConfig {
         this.powThreads = powThreads;
     }
 
-    /**
-     * Represents the default values primarily used by the {@link BaseIotaConfig} field initialisation.
-     */
+    //Couchbase config
+    boolean COUCHBASE_ENABLED = Defaults.COUCHBASE_ENABLED;
+    List<String> COUCHBASE_NODES = Defaults.COUCHBASE_NODES;
+    String COUCHBASE_USERNAME = Defaults.COUCHBASE_USERNAME;
+    String COUCHBASE_PASSWORD = Defaults.COUCHBASE_PASSWORD;
+    String COUCHBASE_TXBUCKET = Defaults.COUCHBASE_TXBUCKET;
+    String COUCHBASE_METADATABUCKET = Defaults.COUCHBASE_METADATABUCKET;
+
+    @JsonProperty
+    @Parameter(names = "--couchbase-enabled", description = CouchbaseConfig.Descriptions.COUCHBASE_ENABLED)
+    public void setCouchbaseEnabled(boolean enabled) {
+       this.COUCHBASE_ENABLED = enabled;
+    }
+    @JsonProperty
+    @Parameter(names = {"--couchbase-nodes"}, description =  CouchbaseConfig.Descriptions.COUCHBASE_NODES)
+    protected void setCouchbaseNodes(String nodes) {
+        this.COUCHBASE_NODES = IotaUtils.splitStringToImmutableList(nodes, SPLIT_STRING_TO_LIST_REGEX);
+    }
+
+    @JsonProperty
+    @Parameter(names = "--couchbase-username", description = CouchbaseConfig.Descriptions.COUCHBASE_USERNAME)
+    public void setCouchbaseUsername(String username) {
+        this.COUCHBASE_USERNAME = username;
+    }
+
+    @JsonProperty
+    @Parameter(names = "--couchbase-password", description = CouchbaseConfig.Descriptions.COUCHBASE_PASSWORD)
+    public void setCouchbasePassword(String password) {
+        this.COUCHBASE_PASSWORD = password;
+    }
+
+
+    @JsonProperty
+    @Parameter(names = "--couchbase-txbucket", description = CouchbaseConfig.Descriptions.COUCHBASE_TXBUCKET)
+    public void setCouchbaseTxBucket(String txbucket) {
+        this.COUCHBASE_TXBUCKET = txbucket;
+    }
+
+
+    @JsonProperty
+    @Parameter(names = "--couchbase-metadatabucket", description = CouchbaseConfig.Descriptions.COUCHBASE_METADATABUCKET)
+    public void setCouchbaseMetadataBucket(String metadatabucket) {
+        this.COUCHBASE_METADATABUCKET = metadatabucket;
+    }
+
+
+    @Override
+    public boolean isCouchBaseEnabled() { return this.COUCHBASE_ENABLED; }
+
+    @Override
+    public String[] getCouchbaseNodes() {return this.COUCHBASE_NODES.toArray(new String[this.COUCHBASE_NODES.size()]);}
+
+    @Override
+    public String getCouchbaseUsername() {return this.COUCHBASE_USERNAME;}
+
+    @Override
+    public String getCouchbasePassword(){return this.COUCHBASE_PASSWORD;}
+
+    @Override
+    public String getTxBucketName(){return this.COUCHBASE_TXBUCKET;}
+
+    @Override
+    public String getMetdataBucketName(){return this.COUCHBASE_METADATABUCKET;}
+
+
     public interface Defaults {
         //API
         int PORT = 14265;
@@ -910,5 +974,13 @@ public abstract class BaseIotaConfig implements IotaConfig {
         int MILESTONE_START_INDEX = 1050000;
         int BELOW_MAX_DEPTH_TRANSACTION_LIMIT = 20_000;
 
+
+        //Couchbase
+        boolean COUCHBASE_ENABLED = false;
+        List<String> COUCHBASE_NODES = new ArrayList<String>();
+        String COUCHBASE_USERNAME = "";
+        String COUCHBASE_PASSWORD = "";
+        String COUCHBASE_TXBUCKET = "tx_bucket";
+        String COUCHBASE_METADATABUCKET = "tx_metadata";
     }
 }

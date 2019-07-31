@@ -51,6 +51,10 @@ public class BundleViewModel implements HashesViewModel {
         return new BundleViewModel((Bundle) tangle.load(Bundle.class, hash), hash);
     }
 
+    public static BundleViewModel loadExternal(Tangle tangle, Indexable hash) throws Exception {
+        return new BundleViewModel((Bundle) tangle.loadExternal(Bundle.class, hash), hash);
+    }
+
     /**
      * Fetches the first persistable {@link Bundle} set from the database and generates a new
      * {@link BundleViewModel} from it. If no {@link Bundle} sets exist in the database, it will return null.

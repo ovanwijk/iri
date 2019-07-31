@@ -66,7 +66,7 @@ import java.util.stream.IntStream;
 public class API {
 
     private static final Logger log = LoggerFactory.getLogger(API.class);
-    
+
     //region [CONSTANTS] ///////////////////////////////////////////////////////////////////////////////
 
     public static final String REFERENCE_TRANSACTION_NOT_FOUND = "reference transaction not found";
@@ -74,25 +74,25 @@ public class API {
 
     public static final String INVALID_SUBTANGLE = "This operation cannot be executed: "
                                                  + "The subtangle has not been updated yet.";
-    
+
     private static final String OVER_MAX_ERROR_MESSAGE = "Could not complete request";
     private static final String INVALID_PARAMS = "Invalid parameters";
 
     private static final char ZERO_LENGTH_ALLOWED = 'Y';
     private static final char ZERO_LENGTH_NOT_ALLOWED = 'N';
-    
+
     private static final int HASH_SIZE = 81;
     private static final int TRYTES_SIZE = 2673;
 
     private static final long MAX_TIMESTAMP_VALUE = (long) (Math.pow(3, 27) - 1) / 2; // max positive 27-trits value
 
     //endregion ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     private static int counterGetTxToApprove = 0;
     private static long ellapsedTime_getTxToApprove = 0L;
     private static int counter_PoW = 0;
     private static long ellapsedTime_PoW = 0L;
-    
+
     //region [CONSTRUCTOR_FIELDS] ///////////////////////////////////////////////////////////////////////////////
 
     private final IotaConfig configuration;
@@ -109,13 +109,13 @@ public class API {
     private final TipsViewModel tipsViewModel;
     private final TransactionValidator transactionValidator;
     private final LatestMilestoneTracker latestMilestoneTracker;
-    
+
     private final int maxFindTxs;
     private final int maxRequestList;
     private final int maxGetTrytes;
 
     private final String[] features;
-    
+
     //endregion ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private final Gson gson = new GsonBuilder().create();
@@ -134,9 +134,9 @@ public class API {
 
     /**
      * Starts loading the IOTA API, parameters do not have to be initialized.
-     * 
+     *
      * @param configuration Holds IRI configuration parameters.
-     * @param ixi If a command is not in the standard API, 
+     * @param ixi If a command is not in the standard API,
      *            we try to process it as a Nashorn JavaScript module through {@link IXI}
      * @param transactionRequester Service where transactions get requested
      * @param spentAddressesService Service to check if addresses are spent
@@ -157,7 +157,7 @@ public class API {
             LatestMilestoneTracker latestMilestoneTracker, TransactionProcessingPipeline txPipeline) {
         this.configuration = configuration;
         this.ixi = ixi;
-        
+
         this.transactionRequester = transactionRequester;
         this.spentAddressesService = spentAddressesService;
         this.tangle = tangle;
@@ -170,13 +170,13 @@ public class API {
         this.tipsViewModel = tipsViewModel;
         this.transactionValidator = transactionValidator;
         this.latestMilestoneTracker = latestMilestoneTracker;
-        
+
         maxFindTxs = configuration.getMaxFindTransactions();
         maxRequestList = configuration.getMaxRequestsList();
         maxGetTrytes = configuration.getMaxGetTrytes();
 
         features = Feature.calculateFeatureNames(configuration);
-        
+
         commandRoute = new HashMap<>();
         commandRoute.put(ApiCommand.ADD_NEIGHBORS, addNeighbors());
         commandRoute.put(ApiCommand.ATTACH_TO_TANGLE, attachToTangle());
@@ -201,7 +201,7 @@ public class API {
     /**
      * Initializes the API for usage.
      * Will initialize and start the supplied {@link RestConnector}
-     * 
+     *
      * @param connector THe connector we use to handle API requests
      */
     public void init(RestConnector connector){
@@ -209,7 +209,7 @@ public class API {
         connector.init(this::process);
         connector.start();
     }
-    
+
     /**
      * Handles an API request body.
      * Its returned {@link AbstractResponse} is created using the following logic
@@ -472,7 +472,7 @@ public class API {
         }
         return AddedNeighborsResponse.create(numberOfAddedNeighbors);
     }
-    
+
     /**
       * Temporarily removes a list of neighbors from your node.
       * The added neighbors will be added again after relaunching IRI.
@@ -524,7 +524,7 @@ public class API {
     private synchronized AbstractResponse getTrytesStatement(List<String> hashes) throws Exception {
         final List<String> elements = new LinkedList<>();
         for (final String hash : hashes) {
-            final TransactionViewModel transactionViewModel = TransactionViewModel.fromHash(tangle, HashFactory.TRANSACTION.create(hash));
+             final TransactionViewModel transactionViewModel = TransactionViewModel.fromHashExternal(tangle, HashFactory.TRANSACTION.create(hash));
             if (transactionViewModel != null) {
                 elements.add(Converter.trytes(transactionViewModel.trits()));
             }
@@ -633,7 +633,7 @@ public class API {
 
     /**
      * <p>
-     * Handles statistics on tip selection. 
+     * Handles statistics on tip selection.
      * Increases the tip selection by one use.
      * </p>
      * <p>
@@ -935,7 +935,7 @@ public class API {
 
     /**
       * <p>
-      * Find transactions that contain the given values in their transaction fields. 
+      * Find transactions that contain the given values in their transaction fields.
       * All input values are lists, for which a list of return values (transaction hashes), in the same order, is returned for all individual elements.
       * The input fields can either be <tt>bundles</tt>, <tt>addresses</tt>, <tt>tags</tt> or <tt>approvees</tt>.
       * </p>
@@ -959,7 +959,7 @@ public class API {
             final Set<String> bundles = getParameterAsSet(request, "bundles", HASH_SIZE);
             for (final String bundle : bundles) {
                 bundlesTransactions.addAll(
-                        BundleViewModel.load(tangle, HashFactory.BUNDLE.create(bundle))
+                        BundleViewModel.loadExternal(tangle, HashFactory.BUNDLE.create(bundle))
                         .getHashes());
             }
             foundTransactions.addAll(bundlesTransactions);
@@ -971,7 +971,7 @@ public class API {
             final Set<String> addresses = getParameterAsSet(request, "addresses", HASH_SIZE);
             for (final String address : addresses) {
                 addressesTransactions.addAll(
-                        AddressViewModel.load(tangle, HashFactory.ADDRESS.create(address))
+                        AddressViewModel.loadExternal(tangle, HashFactory.ADDRESS.create(address))
                         .getHashes());
             }
             foundTransactions.addAll(addressesTransactions);
@@ -984,7 +984,7 @@ public class API {
             for (String tag : tags) {
                 tag = padTag(tag);
                 tagsTransactions.addAll(
-                        TagViewModel.load(tangle, HashFactory.TAG.create(tag))
+                        TagViewModel.loadExternal(tangle, HashFactory.TAG.create(tag))
                         .getHashes());
             }
             if (tagsTransactions.isEmpty()) {
@@ -1004,9 +1004,12 @@ public class API {
         if (request.containsKey("approvees")) {
             final Set<String> approvees = getParameterAsSet(request, "approvees", HASH_SIZE);
             for (final String approvee : approvees) {
+                //TODO skip the need for loading the transaction first
                 approveeTransactions.addAll(
-                        TransactionViewModel.fromHash(tangle, HashFactory.TRANSACTION.create(approvee))
-                        .getApprovers(tangle)
+//                        TransactionViewModel.fromHash(tangle, HashFactory.TRANSACTION.create(approvee))
+//                        .getApprovers(tangle)
+                        TransactionViewModel.fromHashExternal(tangle, HashFactory.TRANSACTION.create(approvee))
+                        .getApproversExternal(tangle)
                         .getHashes());
             }
             foundTransactions.addAll(approveeTransactions);
@@ -1045,7 +1048,7 @@ public class API {
      * Adds '9' until the String is of {@link #HASH_SIZE} length.
      *
      * @param tag The String to fill.
-     * @return The updated 
+     * @return The updated
      * @throws ValidationException If the <tt>tag</tt> is a {@link Hash#NULL_HASH}.
      */
     private String padTag(String tag) throws ValidationException {
@@ -1087,7 +1090,7 @@ public class API {
       * Broadcast a list of transactions to all neighbors.
       * The trytes to be used for this call should be valid, attached transaction trytes.
       * These trytes are returned by <tt>attachToTangle</tt>, or by doing proof of work somewhere else.
-      * 
+      *
       * @param trytes the list of transaction trytes to broadcast
       * @return {@link com.iota.iri.service.dto.AbstractResponse.Emptyness}
       **/
@@ -1119,7 +1122,7 @@ public class API {
       * @throws Exception When the database has encountered an error
       **/
     @Document(name="getBalances")
-    private AbstractResponse getBalancesStatement(List<String> addresses, 
+    private AbstractResponse getBalancesStatement(List<String> addresses,
                                                   List<String> tips,
                                                   int threshold) throws Exception {
 
@@ -1224,11 +1227,11 @@ public class API {
       * <p>
       * Prepares the specified transactions (trytes) for attachment to the Tangle by doing Proof of Work.
       * You need to supply <tt>branchTransaction</tt> as well as <tt>trunkTransaction</tt>.
-      * These are the tips which you're going to validate and reference with this transaction. 
+      * These are the tips which you're going to validate and reference with this transaction.
       * These are obtainable by the <tt>getTransactionsToApprove</tt> API call.
       * </p>
       * <p>
-      * The returned value is a different set of tryte values which you can input into 
+      * The returned value is a different set of tryte values which you can input into
       * <tt>broadcastTransactions</tt> and <tt>storeTransactions</tt>.
       * The last 243 trytes of the return value consist of the following:
       * <ul>
@@ -1532,7 +1535,7 @@ public class API {
         return AbstractResponse.createEmptyResponse();
     }
 
-    
+
     //
     // FUNCTIONAL COMMAND ROUTES
     //
@@ -1582,7 +1585,7 @@ public class API {
                 getParameterAsList(request,"tips", HASH_SIZE):
                 null;
             final int threshold = getParameterAsInt(request, "threshold");
-            
+
             try {
                 return getBalancesStatement(addresses, tips, threshold);
             } catch (Exception e) {
@@ -1620,7 +1623,7 @@ public class API {
             }
         };
     }
-    
+
     private Function<Map<String, Object>, AbstractResponse> getNodeAPIConfiguration() {
         return request -> getNodeAPIConfigurationStatement();
     }
@@ -1692,10 +1695,10 @@ public class API {
             }
         };
     }
-    
+
     private Function<Map<String, Object>, AbstractResponse> checkConsistency() {
         return request -> {
-            if (!isNodeSynchronized()) {
+            if (invalidSubtangleStatus()) {
                 return ErrorResponse.create(INVALID_SUBTANGLE);
             }
             final List<String> transactions = getParameterAsList(request,"tails", HASH_SIZE);
@@ -1705,7 +1708,7 @@ public class API {
                 throw new IllegalStateException(e);
             }
         };
-    }                    
+    }
     private Function<Map<String, Object>, AbstractResponse> wereAddressesSpentFrom() {
         return request -> {
             final List<String> addresses = getParameterAsList(request,"addresses", HASH_SIZE);

@@ -71,6 +71,10 @@ public class TagViewModel implements HashesViewModel {
         return load(tangle, hash, Tag.class);
     }
 
+    public static TagViewModel loadExternal(Tangle tangle, Indexable hash) throws Exception {
+        return new TagViewModel((Tag) tangle.loadExternal(Tag.class, hash), hash);
+    }
+
     /**
      * Creates a new {@link ObsoleteTag} set controller. This controller is created by loading the {@link ObsoleteTag}
      * set referenced by the {@link Hash} identifier from the database, and loading a new {@link TagViewModel} for it.

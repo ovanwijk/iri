@@ -134,6 +134,13 @@ public class TransactionViewModel {
         return transactionViewModel;
     }
 
+    public static TransactionViewModel fromHashExternal(Tangle tangle, final Hash hash) throws Exception {
+        TransactionViewModel transactionViewModel = new TransactionViewModel(
+                (Transaction) tangle.loadExternal(Transaction.class, hash), hash);
+        fillMetadata(tangle, transactionViewModel);
+        return transactionViewModel;
+    }
+
     /**
      * Constructor for a {@link Transaction} set controller interface. This controller is used to interact with and
      * manipulate a provided {@link Transaction} set.
@@ -428,6 +435,13 @@ public class TransactionViewModel {
     public ApproveeViewModel getApprovers(Tangle tangle) throws Exception {
         if (approovers == null) {
             approovers = ApproveeViewModel.load(tangle, hash);
+        }
+        return approovers;
+    }
+
+    public ApproveeViewModel getApproversExternal(Tangle tangle) throws Exception {
+        if (approovers == null) {
+            approovers = ApproveeViewModel.loadExternal(tangle, hash);
         }
         return approovers;
     }
