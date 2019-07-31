@@ -34,7 +34,7 @@ public abstract class BaseIotaConfig implements IotaConfig {
     private boolean testnet = false;
 
     //API
-    protected int port = Defaults.API_PORT;
+    protected int port = Defaults.PORT;
     protected String apiHost = Defaults.API_HOST;
     protected List<String> remoteLimitApi = Defaults.REMOTE_LIMIT_API;
     protected List<InetAddress> remoteTrustedApiHosts = Defaults.REMOTE_LIMIT_API_HOSTS;

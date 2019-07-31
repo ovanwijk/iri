@@ -1698,7 +1698,7 @@ public class API {
 
     private Function<Map<String, Object>, AbstractResponse> checkConsistency() {
         return request -> {
-            if (invalidSubtangleStatus()) {
+            if (!isNodeSynchronized()) {
                 return ErrorResponse.create(INVALID_SUBTANGLE);
             }
             final List<String> transactions = getParameterAsList(request,"tails", HASH_SIZE);

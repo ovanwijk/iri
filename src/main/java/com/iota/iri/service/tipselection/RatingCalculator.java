@@ -4,6 +4,8 @@ import com.iota.iri.model.Hash;
 import com.iota.iri.model.HashId;
 import com.iota.iri.utils.collections.interfaces.UnIterableMap;
 
+import java.util.Map;
+
 /**
  * Calculates the rating for a sub graph
  */
