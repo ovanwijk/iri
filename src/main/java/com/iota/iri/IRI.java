@@ -124,7 +124,8 @@ public class IRI {
                     iota.spentAddressesService, iota.tangle, iota.bundleValidator,
                     iota.snapshotProvider, iota.ledgerService, iota.neighborRouter, iota.tipsSelector,
                     iota.tipsViewModel, iota.transactionValidator,
-                    iota.latestMilestoneTracker, iota.txPipeline);
+                    iota.latestMilestoneTracker, iota.txPipeline,
+                    iota.pathfinding);
             shutdownHook();
 
             try {

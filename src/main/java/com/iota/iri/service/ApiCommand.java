@@ -91,6 +91,8 @@ public enum ApiCommand {
      * Store a transaction on this node, without broadcasting
      */
     STORE_TRANSACTIONS("storeTransactions"),
+
+    FIND_PATHS("findPaths"),
     
     /**
      * Check if an address has been spent from

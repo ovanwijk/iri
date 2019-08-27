@@ -22,6 +22,8 @@ import com.iota.iri.network.pipeline.TransactionProcessingPipeline;
 import com.iota.iri.service.dto.*;
 import com.iota.iri.service.ledger.LedgerService;
 import com.iota.iri.service.milestone.LatestMilestoneTracker;
+import com.iota.iri.service.pathfinding.Pathfinding;
+import com.iota.iri.service.pathfinding.SubtangleDescription;
 import com.iota.iri.service.restserver.RestConnector;
 import com.iota.iri.service.snapshot.SnapshotProvider;
 import com.iota.iri.service.spentaddresses.SpentAddressesService;
@@ -109,6 +111,7 @@ public class API {
     private final TipsViewModel tipsViewModel;
     private final TransactionValidator transactionValidator;
     private final LatestMilestoneTracker latestMilestoneTracker;
+    private final Pathfinding pathfinding;
     
     private final int maxFindTxs;
     private final int maxRequestList;
@@ -154,10 +157,11 @@ public class API {
             SpentAddressesService spentAddressesService, Tangle tangle, BundleValidator bundleValidator,
             SnapshotProvider snapshotProvider, LedgerService ledgerService, NeighborRouter neighborRouter, TipSelector tipsSelector,
             TipsViewModel tipsViewModel, TransactionValidator transactionValidator,
-            LatestMilestoneTracker latestMilestoneTracker, TransactionProcessingPipeline txPipeline) {
+            LatestMilestoneTracker latestMilestoneTracker, TransactionProcessingPipeline txPipeline,
+               Pathfinding pathfinding) {
         this.configuration = configuration;
         this.ixi = ixi;
-        
+        this.pathfinding = pathfinding;
         this.transactionRequester = transactionRequester;
         this.spentAddressesService = spentAddressesService;
         this.tangle = tangle;
@@ -196,6 +200,7 @@ public class API {
         commandRoute.put(ApiCommand.GET_MISSING_TRANSACTIONS, getMissingTransactions());
         commandRoute.put(ApiCommand.CHECK_CONSISTENCY, checkConsistency());
         commandRoute.put(ApiCommand.WERE_ADDRESSES_SPENT_FROM, wereAddressesSpentFrom());
+        commandRoute.put(ApiCommand.FIND_PATHS, findPaths());
     }
 
     /**
@@ -933,6 +938,24 @@ public class API {
         return true;
     }
 
+
+
+    @Document(name="findPaths")
+    private synchronized AbstractResponse findPathsStatement(final Map<String, Object> request) throws Exception {
+
+        if(!request.containsKey("start")){
+            throw new ValidationException("Requires a start field");
+        }
+        Hash start = HashFactory.TRANSACTION.create(getParameterAsStringAndValidate(request, "start", HASH_SIZE));
+        List<Hash> endpoints = getParameterAsList(request, "endpoints",HASH_SIZE).stream()
+                .map(txid -> (HashFactory.TRANSACTION.create(txid)))
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        SubtangleDescription result =  pathfinding.findPath(start, endpoints.toArray(new Hash[endpoints.size()]));
+
+
+        return FindpathResponse.create(result.transactionHashes(), result.branchVertices(), result.trunkVertices());
+    }
     /**
       * <p>
       * Find transactions that contain the given values in their transaction fields. 
@@ -1569,6 +1592,16 @@ public class API {
         return request -> {
             try {
                 return findTransactionsStatement(request);
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        };
+    }
+
+    private Function<Map<String, Object>, AbstractResponse> findPaths() {
+        return request -> {
+            try {
+                return findPathsStatement(request);
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }

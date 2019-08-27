@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.iota.iri.service.pathfinding.Pathfinding;
+import com.iota.iri.service.pathfinding.impl.LazyAStarPathfinding;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +124,7 @@ public class Iota {
     public final IotaConfig configuration;
     public final TipsViewModel tipsViewModel;
     public final TipSelector tipsSelector;
+    public final Pathfinding pathfinding;
 
     /**
      * Initializes the latest snapshot and then creates all services needed to run an IOTA node.
@@ -161,6 +164,8 @@ public class Iota {
         transactionValidator = new TransactionValidator(tangle, snapshotProvider, tipsViewModel, transactionRequester);
 
         tipsSelector = createTipSelector(configuration);
+
+        pathfinding = new LazyAStarPathfinding();
 
         injectDependencies();
     }
@@ -206,6 +211,8 @@ public class Iota {
         if (transactionPruner != null) {
             transactionPruner.start();
         }
+
+        pathfinding.init(tangle);
     }
 
     private void injectDependencies() throws SnapshotException, TransactionPruningException, SpentAddressesException {

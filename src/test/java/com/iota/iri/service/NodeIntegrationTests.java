@@ -61,7 +61,7 @@ public class NodeIntegrationTests {
                     iotaNodes[i].spentAddressesService, iotaNodes[i].tangle, iotaNodes[i].bundleValidator,
                     iotaNodes[i].snapshotProvider, iotaNodes[i].ledgerService, iotaNodes[i].neighborRouter,
                     iotaNodes[i].tipsSelector, iotaNodes[i].tipsViewModel, iotaNodes[i].transactionValidator,
-                    iotaNodes[i].latestMilestoneTracker, iotaNodes[i].txPipeline);
+                    iotaNodes[i].latestMilestoneTracker, iotaNodes[i].txPipeline, iotaNodes[i].pathfinding);
             
             api[i].init(new RestEasy(conf));
         }
