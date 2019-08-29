@@ -5,11 +5,13 @@ import com.iota.iri.model.Hash;
 import com.iota.iri.service.pathfinding.Pathfinding;
 import com.iota.iri.service.pathfinding.SubtangleDescription;
 import com.iota.iri.storage.Tangle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class LazyAStarPathfinding implements Pathfinding {
-
+    private static final Logger log = LoggerFactory.getLogger(LazyAStarPathfinding.class);
     Tangle tangle;
 
 
@@ -19,6 +21,7 @@ public class LazyAStarPathfinding implements Pathfinding {
     }
     @Override
     public SubtangleDescription findPath(Hash startHash, Hash[] endpointsHashes) throws Exception {
+        long ts = System.currentTimeMillis();
         HashMap<Hash, PathRef> tangleView = new HashMap<>();
         TransactionViewModel start = TransactionViewModel.find(tangle, startHash.bytes());
 
@@ -54,6 +57,7 @@ public class LazyAStarPathfinding implements Pathfinding {
 
         SubtangleDescriptionImpl result = new SubtangleDescriptionImpl();
         HashMap<Hash, Integer> resultIndex = new LinkedHashMap<>();
+        Set<String> edgeIndex = new HashSet<>();
         Integer indexCounter = 0;
         for(TransactionViewModel endpoint: endpoints.values()){
             callQueue.putAll(overReachQueue);
@@ -75,15 +79,17 @@ public class LazyAStarPathfinding implements Pathfinding {
                     resultIndex.put(currentRef.shortestPath, indexCounter);
                     indexCounter += 1;
                 }
-                if(currentRef.branchOrTrunk != 's'){
+                if(currentRef.branchOrTrunk != 's' && !edgeIndex.contains(currentRef.txID.toString() + currentRef.shortestPath.toString() )){
                     List<Integer[]> branchOrTrunk = (currentRef.branchOrTrunk == 'b' ? result.branches : result.trunks);
                     branchOrTrunk.add(new Integer[]{resultIndex.get(currentRef.shortestPath), resultIndex.get(currentRef.txID)});
+                    edgeIndex.add(currentRef.txID.toString() + currentRef.shortestPath.toString() );
                 }
                 //  path.add(currentRef.shortestPath);
                 currentRef = tangleView.get(currentRef.shortestPath);
             }while(currentRef.step != 0);
 
         }
+        log.info("Pathfinding took: " + (System.currentTimeMillis() - ts) + "ms");
         return result;
     }
 
@@ -144,7 +150,9 @@ public class LazyAStarPathfinding implements Pathfinding {
                                     p.branchOrTrunk = i == 0 ? 'b' : 't';
                                     //TODO verify if this is even required
                                     int updates = recursiveWeightUpdate(branchOrTrunk.getHash(), tvm.getHash(), p.step - currentStep, 0, tangleView);
-                                    //System.out.println("Updates: " + updates);
+                                    if(updates > 0) {
+                                        System.out.println("Updates: " + updates);
+                                    }
                                 }
                             }
                         }
