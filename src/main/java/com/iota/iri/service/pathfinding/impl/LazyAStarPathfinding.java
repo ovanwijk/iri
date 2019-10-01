@@ -48,7 +48,7 @@ public class LazyAStarPathfinding implements Pathfinding {
         tangleView.put(start.getHash(), new PathRef(startHash,null, 's', start.getBranchTransactionHash(), start.getTrunkTransactionHash(), 0));
 
         SortedMap<Long, List<ApproveeStep>> callQueue = new TreeMap<>(); //Ordered map, oldest transactions first.
-        SortedMap<Long, List<ApproveeStep>> overReachQueue = new TreeMap<>();
+        SortedMap<Long, List<ApproveeStep>> overReachQueue = new TreeMap<>(); //Transactions that reach beyond the timestamp
         overReachQueue.put(start.getTimestamp(), new ArrayList<ApproveeStep>(){
                     {
                         add(new ApproveeStep(start, null, 0));

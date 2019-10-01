@@ -212,7 +212,6 @@ public class Iota {
             transactionPruner.start();
         }
 
-        pathfinding.init(tangle);
     }
 
     private void injectDependencies() throws SnapshotException, TransactionPruningException, SpentAddressesException {
@@ -243,6 +242,8 @@ public class Iota {
         txPipeline.init(neighborRouter, configuration, transactionValidator, tangle, snapshotProvider, tipsViewModel,
                 latestMilestoneTracker, transactionRequester);
         tipRequester.init(neighborRouter, tangle, latestMilestoneTracker, transactionRequester);
+
+        pathfinding.init(tangle);
     }
 
     private void initSpentAddressesProvider() throws SpentAddressesException {
