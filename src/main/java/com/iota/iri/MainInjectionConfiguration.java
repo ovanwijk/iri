@@ -23,6 +23,8 @@ import com.iota.iri.service.milestone.impl.LatestSolidMilestoneTrackerImpl;
 import com.iota.iri.service.milestone.impl.MilestoneServiceImpl;
 import com.iota.iri.service.milestone.impl.MilestoneSolidifierImpl;
 import com.iota.iri.service.milestone.impl.SeenMilestonesRetrieverImpl;
+import com.iota.iri.service.pathfinding.Pathfinding;
+import com.iota.iri.service.pathfinding.impl.LazyAStarPathfinding;
 import com.iota.iri.service.snapshot.LocalSnapshotManager;
 import com.iota.iri.service.snapshot.SnapshotProvider;
 import com.iota.iri.service.snapshot.SnapshotService;
@@ -176,8 +178,8 @@ public class MainInjectionConfiguration extends AbstractModule {
 
     @Singleton
     @Provides
-    Iota provideIota(SpentAddressesProvider spentAddressesProvider, SpentAddressesService spentAddressesService, SnapshotProvider snapshotProvider, SnapshotService snapshotService, @Nullable LocalSnapshotManager localSnapshotManager, MilestoneService milestoneService, LatestMilestoneTracker latestMilestoneTracker, LatestSolidMilestoneTracker latestSolidMilestoneTracker, SeenMilestonesRetriever seenMilestonesRetriever, LedgerService ledgerService, @Nullable TransactionPruner transactionPruner, MilestoneSolidifier milestoneSolidifier, BundleValidator bundleValidator, Tangle tangle, TransactionValidator transactionValidator, TransactionRequester transactionRequester, NeighborRouter neighborRouter, TransactionProcessingPipeline transactionProcessingPipeline, TipsRequester tipsRequester, TipsViewModel tipsViewModel, TipSelector tipsSelector) {
-        return new Iota(configuration, spentAddressesProvider, spentAddressesService, snapshotProvider, snapshotService, localSnapshotManager, milestoneService, latestMilestoneTracker, latestSolidMilestoneTracker, seenMilestonesRetriever, ledgerService, transactionPruner, milestoneSolidifier, bundleValidator, tangle, transactionValidator, transactionRequester, neighborRouter, transactionProcessingPipeline, tipsRequester, tipsViewModel, tipsSelector);
+    Iota provideIota(SpentAddressesProvider spentAddressesProvider, SpentAddressesService spentAddressesService, SnapshotProvider snapshotProvider, SnapshotService snapshotService, @Nullable LocalSnapshotManager localSnapshotManager, MilestoneService milestoneService, LatestMilestoneTracker latestMilestoneTracker, LatestSolidMilestoneTracker latestSolidMilestoneTracker, SeenMilestonesRetriever seenMilestonesRetriever, LedgerService ledgerService, @Nullable TransactionPruner transactionPruner, MilestoneSolidifier milestoneSolidifier, BundleValidator bundleValidator, Tangle tangle, TransactionValidator transactionValidator, TransactionRequester transactionRequester, NeighborRouter neighborRouter, TransactionProcessingPipeline transactionProcessingPipeline, TipsRequester tipsRequester, TipsViewModel tipsViewModel, TipSelector tipsSelector, Pathfinding pathfinding) {
+        return new Iota(configuration, spentAddressesProvider, spentAddressesService, snapshotProvider, snapshotService, localSnapshotManager, milestoneService, latestMilestoneTracker, latestSolidMilestoneTracker, seenMilestonesRetriever, ledgerService, transactionPruner, milestoneSolidifier, bundleValidator, tangle, transactionValidator, transactionRequester, neighborRouter, transactionProcessingPipeline, tipsRequester, tipsViewModel, tipsSelector, pathfinding);
     }
 
     @Singleton
@@ -186,14 +188,22 @@ public class MainInjectionConfiguration extends AbstractModule {
         return new IXI(iota);
     }
 
+
+    @Singleton
+    @Provides
+    Pathfinding providePathfinding(Tangle iota) {
+        return new LazyAStarPathfinding(iota);
+    }
+
     @Singleton
     @Provides
     API provideApi(IXI ixi, TransactionRequester transactionRequester,
                           SpentAddressesService spentAddressesService, Tangle tangle, BundleValidator bundleValidator,
                           SnapshotProvider snapshotProvider, LedgerService ledgerService, NeighborRouter neighborRouter, TipSelector tipsSelector,
                           TipsViewModel tipsViewModel, TransactionValidator transactionValidator,
+                          Pathfinding pathfinding,
                           LatestMilestoneTracker latestMilestoneTracker, TransactionProcessingPipeline txPipeline) {
-        return new API(configuration, ixi, transactionRequester, spentAddressesService, tangle, bundleValidator, snapshotProvider, ledgerService, neighborRouter, tipsSelector, tipsViewModel, transactionValidator, latestMilestoneTracker, txPipeline);
+        return new API(configuration, ixi, transactionRequester, spentAddressesService, tangle, bundleValidator, snapshotProvider, ledgerService, neighborRouter, tipsSelector, tipsViewModel, transactionValidator, latestMilestoneTracker, txPipeline, pathfinding);
     }
 
     @Override

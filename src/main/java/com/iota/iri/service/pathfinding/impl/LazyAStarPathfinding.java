@@ -15,6 +15,10 @@ public class LazyAStarPathfinding implements Pathfinding {
     Tangle tangle;
 
 
+    public LazyAStarPathfinding(Tangle tangle){
+        this.tangle = tangle;
+    }
+
     @Override
     public void init(Tangle tangle){
         this.tangle = tangle;
