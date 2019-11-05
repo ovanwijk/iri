@@ -4,6 +4,10 @@ import com.iota.iri.controllers.TransactionViewModel;
 import com.iota.iri.model.Hash;
 import com.iota.iri.model.persistables.Approvee;
 
+
+/**
+ * Descriptor for reverse walking the
+ */
 public class ApproveeStep {
     public final TransactionViewModel tvm;
     public final Hash approveeHash;

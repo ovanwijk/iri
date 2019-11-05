@@ -10,6 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+
+/**
+ * Lazy A Star pathfinding algoritm.
+ */
 public class LazyAStarPathfinding implements Pathfinding {
     private static final Logger log = LoggerFactory.getLogger(LazyAStarPathfinding.class);
     Tangle tangle;
@@ -119,24 +123,28 @@ public class LazyAStarPathfinding implements Pathfinding {
                 List<ApproveeStep> transactions = callQueue.remove(callQueue.firstKey());
                 for (ApproveeStep st : transactions) {
                     TransactionViewModel tvm = st.tvm;
-                    int currentStep = st.step;
+                    int currentStep = st.step; //how many steps deep it is currently
 
                     //If the current transactions over reach the timestamp boundry add them to the overReach queue
                     //This queue will be used to start for the next transaction.
                     SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > minimumTimestamp ? callQueue : overReach);
+                    //For the sake of pathfinding it doesnt matter if we walk the trunk or the branch but for the results it does
                     TransactionViewModel[] branchAndTrunk = new TransactionViewModel[]{tvm.getBranchTransaction(tangle), tvm.getTrunkTransaction(tangle)};
-                    for (int i =0; i < 2; i++) {
+
+                    for (int i = 0; i < 2; i++) {
                         TransactionViewModel branchOrTrunk = branchAndTrunk[i];
                         branchOrTrunk.setMetadata();
                         if (branchOrTrunk.getTimestamp() >= 0) {
                             if (!tangleView.containsKey(branchOrTrunk.getHash())) {
-                                //TransactionViewModel branch = tvm.getBranchTransaction(tangle);
-
-                                tangleView.put(branchOrTrunk.getHash(), new PathRef(branchOrTrunk.getHash(), tvm.getHash(), i == 0 ? 'b' : 't', branchOrTrunk.getBranchTransactionHash(), branchOrTrunk.getTrunkTransactionHash(), currentStep + 1));
+                                tangleView.put(branchOrTrunk.getHash(), new PathRef(branchOrTrunk.getHash(),
+                                        tvm.getHash(),
+                                        i == 0 ? 'b' : 't', //here we use the index to put back the trunk or branch information
+                                        branchOrTrunk.getBranchTransactionHash(), branchOrTrunk.getTrunkTransactionHash(), currentStep + 1));
+                                //calculate the timestamp based difference between transactions
                                 long timewarpDistance = tvm.getTimestamp() - branchOrTrunk.getTimestamp();
+                                //assume the same distance is travelled on the same path(either branch or trunk).
                                 long projectedCallqueue = branchOrTrunk.getTimestamp() - timewarpDistance;
                                 if (queueReference.containsKey(projectedCallqueue)) {
-
                                     queueReference.get(projectedCallqueue).add(new ApproveeStep(branchOrTrunk, tvm.getHash(), currentStep + 1));//When it already exists we just append to the existing list.
                                 } else {
                                     queueReference.put(projectedCallqueue, new ArrayList<ApproveeStep>() {

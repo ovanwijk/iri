@@ -7,25 +7,37 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * SubtangleDescription implementation
+ */
 public class SubtangleDescriptionImpl implements SubtangleDescription {
 
 
-    public List<Hash> transactions = new LinkedList<>();
-    public List<Integer[]> branches = new LinkedList<>();
-    public List<Integer[]> trunks = new LinkedList<>();
+    List<Hash> transactions = new LinkedList<>();
+    List<Integer[]> branches = new LinkedList<>();
+    List<Integer[]> trunks = new LinkedList<>();
 
 
-
+    /**
+     * @see SubtangleDescription#transactionHashes()
+     * @return
+     */
     @Override
     public List<Hash> transactionHashes() {
         return transactions;
     }
-
+    /**
+     * @see SubtangleDescription#branchVertices()
+     * @return
+     */
     @Override
     public List<Integer[]> branchVertices() {
         return branches;
     }
-
+    /**
+     * @see SubtangleDescription#trunkVertices()
+     * @return
+     */
     @Override
     public List<Integer[]> trunkVertices() {
         return trunks;
