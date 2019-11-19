@@ -1838,7 +1838,7 @@ public class API {
 
     private Function<Map<String, Object>, AbstractResponse> pinTransactionTrytes() {
         return request -> {
-            final List<String> transactionTrytes = getParameterAsList(request,"trytes", TRYTES_SIZE);
+            List<String> transactionTrytes = getParameterAsList(request,"trytes", TRYTES_SIZE);
             try {
                 return pinTransactionTrytesStatement(transactionTrytes);
             } catch (Exception e) {
@@ -1849,7 +1849,7 @@ public class API {
 
     private Function<Map<String, Object>, AbstractResponse> pinTransactionHashes() {
         return request -> {
-            final List<String> txids = getParameterAsList(request,"hashes", HASH_SIZE);
+            List<String> txids = getParameterAsList(request,"hashes", HASH_SIZE);
             try {
                 return pinTransactionHashesStatement(txids);
             } catch (Exception e) {
@@ -1860,7 +1860,7 @@ public class API {
 
     private Function<Map<String, Object>, AbstractResponse> isPinned() {
         return request -> {
-            final List<String> txids = getParameterAsList(request,"hashes", HASH_SIZE);
+            List<String> txids = getParameterAsList(request,"hashes", HASH_SIZE);
             try {
                 return isPinnedStatement(txids);
             } catch (Exception e) {
@@ -1871,7 +1871,7 @@ public class API {
 
     private Function<Map<String, Object>, AbstractResponse> unpinTransactionHashes() {
         return request -> {
-            final List<String> txids = getParameterAsList(request,"hashes", HASH_SIZE);
+            List<String> txids = getParameterAsList(request,"hashes", HASH_SIZE);
             try {
                 return unpinTransactionHashesStatement(txids);
             } catch (Exception e) {
