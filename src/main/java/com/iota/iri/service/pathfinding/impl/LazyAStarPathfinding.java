@@ -127,7 +127,8 @@ public class LazyAStarPathfinding implements Pathfinding {
 
                     //If the current transactions over reach the timestamp boundry add them to the overReach queue
                     //This queue will be used to start for the next transaction.
-                    SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > minimumTimestamp ? callQueue : overReach);
+                    //The -90 is an offset in seconds to support somewhat odd timestamps.
+                    SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > (minimumTimestamp - 90) ? callQueue : overReach);
                     //For the sake of pathfinding it doesnt matter if we walk the trunk or the branch but for the results it does
                     TransactionViewModel[] branchAndTrunk = new TransactionViewModel[]{tvm.getBranchTransaction(tangle), tvm.getTrunkTransaction(tangle)};
 
