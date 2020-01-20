@@ -9,6 +9,13 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iota.iri.storage.Tangle;
+import com.iota.iri.storage.PersistenceProvider;
+import com.iota.iri.storage.LocalSnapshotsPersistenceProvider;
+import com.iota.iri.storage.rocksDB.RocksDBPersistenceProvider;
+import com.iota.iri.storage.Indexable;
+import com.iota.iri.storage.Persistable;
+
 import com.iota.iri.conf.IotaConfig;
 import com.iota.iri.controllers.TipsViewModel;
 import com.iota.iri.controllers.TransactionViewModel;
@@ -17,7 +24,11 @@ import com.iota.iri.network.TipsRequester;
 import com.iota.iri.network.TransactionRequester;
 import com.iota.iri.network.pipeline.TransactionProcessingPipeline;
 import com.iota.iri.service.ledger.LedgerService;
-import com.iota.iri.service.milestone.*;
+import com.iota.iri.service.milestone.LatestMilestoneTracker;
+import com.iota.iri.service.milestone.LatestSolidMilestoneTracker;
+import com.iota.iri.service.milestone.MilestoneService;
+import com.iota.iri.service.milestone.MilestoneSolidifier;
+import com.iota.iri.service.milestone.SeenMilestonesRetriever;
 import com.iota.iri.service.snapshot.LocalSnapshotManager;
 import com.iota.iri.service.snapshot.SnapshotException;
 import com.iota.iri.service.snapshot.SnapshotProvider;
@@ -27,20 +38,8 @@ import com.iota.iri.service.spentaddresses.SpentAddressesProvider;
 import com.iota.iri.service.spentaddresses.SpentAddressesService;
 import com.iota.iri.service.tipselection.TipSelector;
 import com.iota.iri.service.transactionpruning.TransactionPruner;
-import com.iota.iri.storage.Indexable;
-import com.iota.iri.storage.Persistable;
-import com.iota.iri.storage.PersistenceProvider;
-import com.iota.iri.storage.Tangle;
-import com.iota.iri.storage.rocksDB.RocksDBPersistenceProvider;
 import com.iota.iri.utils.Pair;
 import com.iota.iri.zmq.ZmqMessageQueueProvider;
-
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -116,13 +115,15 @@ public class Iota {
     public final TipSelector tipsSelector;
     public final Pathfinding pathfinding;
 
+    public LocalSnapshotsPersistenceProvider localSnapshotsDb;
+
     /**
      * Initializes the latest snapshot and then creates all services needed to run an IOTA node.
      *
      * @param configuration Information about how this node will be configured.
      *
      */
-    public Iota(IotaConfig configuration, SpentAddressesProvider spentAddressesProvider, SpentAddressesService spentAddressesService, SnapshotProvider snapshotProvider, SnapshotService snapshotService, LocalSnapshotManager localSnapshotManager, MilestoneService milestoneService, LatestMilestoneTracker latestMilestoneTracker, LatestSolidMilestoneTracker latestSolidMilestoneTracker, SeenMilestonesRetriever seenMilestonesRetriever, LedgerService ledgerService, TransactionPruner transactionPruner, MilestoneSolidifier milestoneSolidifier, BundleValidator bundleValidator, Tangle tangle, TransactionValidator transactionValidator, TransactionRequester transactionRequester, NeighborRouter neighborRouter, TransactionProcessingPipeline transactionProcessingPipeline, TipsRequester tipsRequester, TipsViewModel tipsViewModel, TipSelector tipsSelector, Pathfinding pathfinding) {
+    public Iota(IotaConfig configuration, SpentAddressesProvider spentAddressesProvider, SpentAddressesService spentAddressesService, SnapshotProvider snapshotProvider, SnapshotService snapshotService, LocalSnapshotManager localSnapshotManager, MilestoneService milestoneService, LatestMilestoneTracker latestMilestoneTracker, LatestSolidMilestoneTracker latestSolidMilestoneTracker, SeenMilestonesRetriever seenMilestonesRetriever, LedgerService ledgerService, TransactionPruner transactionPruner, MilestoneSolidifier milestoneSolidifier, BundleValidator bundleValidator, Tangle tangle, TransactionValidator transactionValidator, TransactionRequester transactionRequester, NeighborRouter neighborRouter, TransactionProcessingPipeline transactionProcessingPipeline, TipsRequester tipsRequester, TipsViewModel tipsViewModel, TipSelector tipsSelector, Pathfinding pathfinding, LocalSnapshotsPersistenceProvider localSnapshotsDb) {
         this.configuration = configuration;
 
         this.ledgerService = ledgerService;
@@ -140,6 +141,8 @@ public class Iota {
         this.neighborRouter = neighborRouter;
         this.txPipeline = transactionProcessingPipeline;
         this.tipsRequester = tipsRequester;
+        this.localSnapshotsDb = localSnapshotsDb;
+
 
         // legacy classes
         this.bundleValidator = bundleValidator;
@@ -179,6 +182,7 @@ public class Iota {
      *                   error.
      */
     public void init() throws Exception {
+        localSnapshotsDb.init();
         initDependencies(); // remainder of injectDependencies method (contained init code)
 
         initializeTangle();
@@ -233,7 +237,8 @@ public class Iota {
                 log.info("Rescanned {} Transactions", counter);
             }
             List<Pair<Indexable, Persistable>> saveBatch = tx.getSaveBatch();
-            saveBatch.remove(5);
+            //don't re-save the tx itself
+            saveBatch.remove(saveBatch.size() - 1);
             tangle.saveBatch(saveBatch);
             tx = tx.next(tangle);
         }
@@ -261,11 +266,13 @@ public class Iota {
         txPipeline.shutdown();
         neighborRouter.shutdown();
         transactionValidator.shutdown();
+        localSnapshotsDb.shutdown();
         tangle.shutdown();
 
         // free the resources of the snapshot provider last because all other instances need it
         snapshotProvider.shutdown();
     }
+
 
     private void initializeTangle() {
         switch (configuration.getMainDb()) {
@@ -273,6 +280,7 @@ public class Iota {
                 tangle.addPersistenceProvider(createRocksDbProvider(
                         configuration.getDbPath(),
                         configuration.getDbLogPath(),
+                        configuration.getDbConfigFile(),
                         configuration.getDbCacheSize(),
                         Tangle.COLUMN_FAMILIES,
                         Tangle.METADATA_COLUMN_FAMILY)
@@ -293,16 +301,17 @@ public class Iota {
      *
      * @param path The location where the database will be stored
      * @param log The location where the log files will be stored
+     * @param configFile The location where the RocksDB config is read from
      * @param cacheSize the size of the cache used by the database implementation
      * @param columnFamily A map of the names related to their Persistable class
      * @param metadata Map of metadata used by the Persistable class, can be <code>null</code>
      * @return A new Persistance provider
      */
-    private PersistenceProvider createRocksDbProvider(String path, String log, int cacheSize,
+    private PersistenceProvider createRocksDbProvider(String path, String log, String configFile, int cacheSize,
             Map<String, Class<? extends Persistable>> columnFamily,
             Map.Entry<String, Class<? extends Persistable>> metadata) {
         return new RocksDBPersistenceProvider(
-                path, log, cacheSize, columnFamily, metadata);
+                path, log, configFile, cacheSize, columnFamily, metadata);
     }
 
 }
