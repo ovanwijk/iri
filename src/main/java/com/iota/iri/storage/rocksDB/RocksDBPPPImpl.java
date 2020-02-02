@@ -451,7 +451,7 @@ public class RocksDBPPPImpl implements PermanentPersistenceProvider, Persistence
         if (dbResult == null) {
             dbResult = new byte[0];
         }
-        if (Bytes.indexOf(dbResult, indexBytes) != -1) {// not found
+        if (Bytes.indexOf(dbResult, indexBytes) == -1) {// not found
 
             ByteBuffer buffer = ByteBuffer
                     .allocate(dbResult.length + indexBytes.length + (dbResult.length > 0 ? 1 : 0));// +1 delimiter
