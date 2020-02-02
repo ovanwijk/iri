@@ -95,6 +95,7 @@ public class LazyAStarPathfinding implements Pathfinding {
                 //  path.add(currentRef.shortestPath);
                 currentRef = tangleView.get(currentRef.shortestPath);
             }while(currentRef.step != 0);
+            log.trace("Breakpoint");
 
         }
         log.info("Pathfinding took: " + (System.currentTimeMillis() - ts) + "ms");
@@ -127,7 +128,7 @@ public class LazyAStarPathfinding implements Pathfinding {
 
                     //If the current transactions over reach the timestamp boundry add them to the overReach queue
                     //This queue will be used to start for the next transaction.
-                    SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > minimumTimestamp ? callQueue : overReach);
+                    SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > (minimumTimestamp-120) ? callQueue : overReach);
                     //For the sake of pathfinding it doesnt matter if we walk the trunk or the branch but for the results it does
                     TransactionViewModel[] branchAndTrunk = new TransactionViewModel[]{tvm.getBranchTransaction(tangle), tvm.getTrunkTransaction(tangle)};
 
@@ -161,10 +162,10 @@ public class LazyAStarPathfinding implements Pathfinding {
                                     p.shortestPath = tvm.getHash();
                                     p.branchOrTrunk = i == 0 ? 'b' : 't';
                                     //TODO verify if this is even required
-                                    int updates = recursiveWeightUpdate(branchOrTrunk.getHash(), tvm.getHash(), p.step - currentStep, 0, tangleView);
-                                    if(updates > 0) {
-                                        System.out.println("Updates: " + updates);
-                                    }
+//                                    int updates = recursiveWeightUpdate(branchOrTrunk.getHash(), tvm.getHash(), p.step - currentStep, 0, tangleView);
+//                                    if(updates > 0) {
+//                                        System.out.println("Updates: " + updates);
+//                                    }
                                 }
                             }
                         }
