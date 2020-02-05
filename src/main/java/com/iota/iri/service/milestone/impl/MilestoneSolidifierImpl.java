@@ -30,7 +30,7 @@ public class MilestoneSolidifierImpl implements MilestoneSolidifier {
     /**
      * Defines the amount of milestones that we "simultaneously" try to solidify in one pass.
      */
-    private static final int SOLIDIFICATION_QUEUE_SIZE = 20;
+    private static final int SOLIDIFICATION_QUEUE_SIZE = 200;
 
     /**
      * Defines the interval in which solidity checks are issued (in milliseconds).
@@ -169,6 +169,7 @@ public class MilestoneSolidifierImpl implements MilestoneSolidifier {
             }
         } else if (milestoneEntry.getValue() < youngestMilestoneInQueue.getValue()) {
             milestonesToSolidify.remove(youngestMilestoneInQueue.getKey());
+            log.info("Removing milestone  " + youngestMilestoneInQueue.toString() );
             milestonesToSolidify.put(milestoneEntry.getKey(), milestoneEntry.getValue());
 
             determineYoungestMilestoneInQueue();
@@ -262,6 +263,7 @@ public class MilestoneSolidifierImpl implements MilestoneSolidifier {
     private void refillSolidificationQueue() {
         if(youngestMilestoneInQueue == null && !milestonesToSolidify.isEmpty()) {
             determineYoungestMilestoneInQueue();
+
         }
 
         Map.Entry<Hash, Integer> nextSolidificationCandidate;
