@@ -46,7 +46,14 @@ public class LazyAStarPathfinding implements Pathfinding {
                 throw new Exception("Cannot find destination transaction: " + endpointsHashes[i].toString());
             }
             found.setMetadata();
-            endpoints.put(found.getTimestamp(), found);
+            long sortIncrease = 0;
+            while (endpoints.containsKey(found.getTimestamp() + sortIncrease)){
+                sortIncrease += 1;
+            }
+
+            endpoints.put(found.getTimestamp() + sortIncrease, found);
+
+
         }
 
         //TODO timestamp sanity check, transactions cannot be older than the tangle! Removes false positives.
