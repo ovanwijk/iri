@@ -134,6 +134,10 @@ public class TransactionValidator {
         if(transactionRequester.wasTransactionRecentlyRequested(transactionViewModel.getHash())) {
             return false;
         }
+        //TODO fix this for AION
+        if(transactionViewModel.fromPinTrytes) {
+            return false;
+        }
 
         if (transactionViewModel.getAttachmentTimestamp() == 0) {
             return transactionViewModel.getTimestamp() < snapshotProvider.getInitialSnapshot().getTimestamp() && !snapshotProvider.getInitialSnapshot().hasSolidEntryPoint(transactionViewModel.getHash())

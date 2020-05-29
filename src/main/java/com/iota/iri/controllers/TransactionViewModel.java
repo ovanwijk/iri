@@ -18,7 +18,7 @@ import java.util.*;
 public class TransactionViewModel {
 
     private final Transaction transaction;
-
+    public boolean fromPinTrytes = true;
     /** Length of a transaction object in trytes */
     public static final int SIZE = 1604;
     private static final int TAG_SIZE_IN_BYTES = 17; // = ceil(81 TRITS / 5 TRITS_PER_BYTE)
