@@ -40,6 +40,8 @@ import com.iota.iri.service.dto.GetTransactionsToApproveResponse;
 import com.iota.iri.service.dto.GetTrytesResponse;
 import com.iota.iri.service.dto.RemoveNeighborsResponse;
 import com.iota.iri.service.dto.WereAddressesSpentFrom;
+import com.iota.iri.service.dto.BooleanValuesResponse;
+import com.iota.iri.service.dto.FindpathResponse;
 import com.iota.iri.service.ledger.LedgerService;
 import com.iota.iri.service.milestone.MilestoneSolidifier;
 import com.iota.iri.service.pathfinding.Pathfinding;

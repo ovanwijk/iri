@@ -594,5 +594,8 @@ public class RocksDBPPPImpl implements PermanentPersistenceProvider, Persistence
             throw e;
         }
     }
+    public long getPersistenceSize() {
+        return 0l;
+    }
 
 }
