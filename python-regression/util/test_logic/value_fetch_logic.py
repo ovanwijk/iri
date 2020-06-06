@@ -121,12 +121,24 @@ def fetch_bool_list(value):
     node = world.config['nodeId']
 
     response = world.responses[api_call][node]
+    keys = list(response.keys())
+    response = response[keys[0]]
 
     if value == "False":
         return [False] * len(response)
     else:
         return [True] * len(response)
 
+
+def fetch_bool_list_mixed(value):
+    """
+    Returns a list filled with bool conversions of the input string separated by space".
+    :param value: The input value
+    :return: The list of bool values
+    """
+
+    bool_list = value.split()
+    return [True if x == "True" else False for x in bool_list]
 
 
 def fetch_response_value(value):
