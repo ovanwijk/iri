@@ -51,6 +51,7 @@ import com.iota.iri.service.restserver.RestConnector;
 import com.iota.iri.service.snapshot.SnapshotProvider;
 import com.iota.iri.service.spentaddresses.SpentAddressesService;
 import com.iota.iri.service.tipselection.TipSelector;
+import com.iota.iri.service.tipselection.impl.RandomTipSelectorImpl;
 import com.iota.iri.service.tipselection.impl.TipSelectionCancelledException;
 import com.iota.iri.service.tipselection.impl.WalkValidatorImpl;
 import com.iota.iri.storage.Tangle;
@@ -220,7 +221,7 @@ public class API {
         this.ledgerService = ledgerService;
         this.neighborRouter = neighborRouter;
         this.txPipeline = txPipeline;
-        this.tipsSelector = tipsSelector;
+        this.tipsSelector =  new RandomTipSelectorImpl(tipsViewModel); //tipsSelector;
         this.tipsViewModel = tipsViewModel;
         this.transactionValidator = transactionValidator;
         this.transactionSolidifier = transactionSolidifier;

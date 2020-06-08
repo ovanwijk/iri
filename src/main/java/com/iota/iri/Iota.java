@@ -3,6 +3,7 @@ package com.iota.iri;
 import java.util.List;
 import java.util.Map;
 
+import com.iota.iri.service.tipselection.impl.RandomTipSelectorImpl;
 import com.iota.iri.storage.rocksDB.RocksDBPPPImpl;
 
 import com.iota.iri.service.pathfinding.Pathfinding;
@@ -167,7 +168,8 @@ public class Iota {
         this.transactionRequester = transactionRequester;
         this.transactionValidator = transactionValidator;
 
-        this.tipsSelector = tipsSelector;
+
+        this.tipsSelector = tipsSelector;// new RandomTipSelectorImpl(tipsViewModel);  // tipsSelector;
         this.pathfinding = pathfinding;
 
     }

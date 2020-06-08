@@ -1,10 +1,7 @@
 package com.iota.iri.controllers;
 
 import java.security.SecureRandom;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import com.iota.iri.model.Hash;
 
@@ -20,6 +17,7 @@ public class TipsViewModel {
 
     private final FifoHashCache<Hash> tips = new FifoHashCache<>(TipsViewModel.MAX_TIPS);
     private final FifoHashCache<Hash> solidTips = new FifoHashCache<>(TipsViewModel.MAX_TIPS);
+    private final ArrayList<Hash> exponentialList = new ArrayList<>();
 
     private final SecureRandom seed = new SecureRandom();
     private final Object sync = new Object();
@@ -32,6 +30,7 @@ public class TipsViewModel {
     public void addTipHash(Hash hash) {
         synchronized (sync) {
             tips.add(hash);
+            exponentialList.add(hash);
         }
     }
 
@@ -42,6 +41,7 @@ public class TipsViewModel {
      */
     public void removeTipHash(Hash hash) {
         synchronized (sync) {
+            exponentialList.remove(hash);
             if (!tips.remove(hash)) {
                 solidTips.remove(hash);
             }
@@ -60,6 +60,7 @@ public class TipsViewModel {
      */
     public void setSolid(Hash tip) {
         synchronized (sync) {
+            exponentialList.remove(tip);
             if (tips.remove(tip)) {
                 solidTips.add(tip);
             }
@@ -126,6 +127,7 @@ public class TipsViewModel {
             if (size == 0) {
                 return null;
             }
+
             int index = seed.nextInt(size);
             Iterator<Hash> hashIterator;
             hashIterator = tips.iterator();
@@ -134,6 +136,28 @@ public class TipsViewModel {
                 hash = hashIterator.next();
             }
             return hash;
+            //return tips.size() != 0 ? tips.get(seed.nextInt(tips.size())) : null;
+        }
+    }
+
+
+    public Hash getExponentialRandomNonSolidTipHash() {
+        synchronized (sync) {
+            int size = tips.size();
+//            if (size == 0) {
+//                return null;
+//            }
+
+            int index = (int)(( -(Math.log(seed.nextDouble()) / 3)) * size);
+
+            //int index = seed.nextInt(size);
+//            Iterator<Hash> hashIterator;
+//            hashIterator = tips.iterator();
+//            Hash hash = null;
+//            while (index-- >= 0 && hashIterator.hasNext()) {
+//                hash = hashIterator.next();
+//            }
+            return exponentialList.get(index);
             //return tips.size() != 0 ? tips.get(seed.nextInt(tips.size())) : null;
         }
     }
