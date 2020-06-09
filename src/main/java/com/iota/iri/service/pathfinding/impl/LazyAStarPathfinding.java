@@ -148,6 +148,9 @@ public class LazyAStarPathfinding implements Pathfinding {
                         if (branchOrTrunk.getTimestamp() > 0) {
                             SortedMap<Long, List<ApproveeStep>> queueReference =
                                     (branchOrTrunk.getTimestamp() > (minimumTimestamp-600) ? callQueue : overReach);
+                            if(branchOrTrunk.getTimestamp() > (minimumTimestamp-600) ){
+                                System.out.println(branchOrTrunk.getHash().toString() + " " + branchOrTrunk.getTimestamp());
+                            }
 
                             if (!tangleView.containsKey(branchOrTrunk.getHash())) {
                                 tangleView.put(branchOrTrunk.getHash(), new PathRef(branchOrTrunk.getHash(),
