@@ -178,6 +178,8 @@ public class LazyAStarPathfinding implements Pathfinding {
 //                                    }
                                 }
                             }
+                        }else{
+                            overReachCount += 1;
                         }
                     }
                 }
@@ -185,7 +187,7 @@ public class LazyAStarPathfinding implements Pathfinding {
             } while (!callQueue.isEmpty() && !tangleView.containsKey(endpoint.getHash()));
 
             if (callQueue.isEmpty()) {
-                throw new Exception("Paths not found for endpoint: " +  endpoint.getHash() + " txCount " + txCount + " size: " +overReach.size() );
+                throw new Exception("Paths not found for endpoint: " +  endpoint.getHash() + " txCount " + txCount + " size: " +overReach.size() + " No path:" + overReachCount);
             }
 
     }
