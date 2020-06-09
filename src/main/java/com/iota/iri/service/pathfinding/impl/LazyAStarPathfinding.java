@@ -126,16 +126,19 @@ public class LazyAStarPathfinding implements Pathfinding {
 
     private void exploreTangle(SortedMap<Long, List<ApproveeStep>> callQueue, SortedMap<Long, List<ApproveeStep>> overReach, TransactionViewModel endpoint, HashMap<Hash, PathRef> tangleView) throws Exception {
         long minimumTimestamp = endpoint.getTimestamp();
+        long txCount = 0;
+        long overReachCount = 0;
 //        try {
             do {
                 List<ApproveeStep> transactions = callQueue.remove(callQueue.firstKey());
                 for (ApproveeStep st : transactions) {
+                    txCount += 1;
                     TransactionViewModel tvm = st.tvm;
                     int currentStep = st.step; //how many steps deep it is currently
 
                     //If the current transactions over reach the timestamp boundry add them to the overReach queue
                     //This queue will be used to start for the next transaction.
-                    SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > (minimumTimestamp-120) ? callQueue : overReach);
+                    SortedMap<Long, List<ApproveeStep>> queueReference = (tvm.getTimestamp() > (minimumTimestamp-3600) ? callQueue : overReach);
                     //For the sake of pathfinding it doesnt matter if we walk the trunk or the branch but for the results it does
                     TransactionViewModel[] branchAndTrunk = new TransactionViewModel[]{tvm.getBranchTransaction(tangle), tvm.getTrunkTransaction(tangle)};
 
@@ -182,7 +185,7 @@ public class LazyAStarPathfinding implements Pathfinding {
             } while (!callQueue.isEmpty() && !tangleView.containsKey(endpoint.getHash()));
 
             if (callQueue.isEmpty()) {
-                throw new Exception("Paths not found for endpoint:" +  endpoint.getHash());
+                throw new Exception("Paths not found for endpoint: " +  endpoint.getHash() + " txCount " + txCount + " size: " );
             }
 
     }
