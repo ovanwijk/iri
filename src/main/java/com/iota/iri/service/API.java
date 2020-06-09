@@ -221,7 +221,7 @@ public class API {
         this.ledgerService = ledgerService;
         this.neighborRouter = neighborRouter;
         this.txPipeline = txPipeline;
-        this.tipsSelector =  new RandomTipSelectorImpl(tipsViewModel); //tipsSelector;
+        this.tipsSelector =  tipsSelector;//new RandomTipSelectorImpl(tipsViewModel); //tipsSelector;
         this.tipsViewModel = tipsViewModel;
         this.transactionValidator = transactionValidator;
         this.transactionSolidifier = transactionSolidifier;
