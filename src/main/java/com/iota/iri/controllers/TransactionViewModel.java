@@ -707,7 +707,7 @@ public class TransactionViewModel {
     public void setMetadata() {
         transaction.value = Converter.longValue(trits(), VALUE_TRINARY_OFFSET, VALUE_USABLE_TRINARY_SIZE);
         transaction.timestamp = Converter.longValue(trits(), TIMESTAMP_TRINARY_OFFSET, TIMESTAMP_TRINARY_SIZE);
-        if (transaction.timestamp > 1262304000000L ) transaction.timestamp /= 1000L; // if > 01.01.2010 in
+        if (transaction.timestamp > 1262304000000L ) {transaction.timestamp /= 1000L;} // if > 01.01.2010 in
         // milliseconds
         transaction.currentIndex = Converter.longValue(trits(), CURRENT_INDEX_TRINARY_OFFSET,
                 CURRENT_INDEX_TRINARY_SIZE);
