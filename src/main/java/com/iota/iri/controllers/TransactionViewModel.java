@@ -664,6 +664,18 @@ public class TransactionViewModel {
         return transaction.timestamp;
     }
 
+    /** @return The stored {@link Transaction#timestamp} */
+    public long getLowestTimestamp() {
+        if (transaction.timestamp == 0) {
+            return transaction.attachmentTimestamp / 1000l;
+        }
+        if (transaction.attachmentTimestamp == 0) {
+            return transaction.timestamp;
+        }
+
+        return Math.max(transaction.timestamp, transaction.attachmentTimestamp / 1000l);
+    }
+
     /**
      * Creates a byte array of the size {@value NONCE_TRINARY_SIZE} and copies the nonce section of the transaction
      * trits into the array. This array is then returned.

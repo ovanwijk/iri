@@ -125,7 +125,7 @@ public class LazyAStarPathfinding implements Pathfinding {
 
 
     private void exploreTangle(SortedMap<Long, List<ApproveeStep>> callQueue, SortedMap<Long, List<ApproveeStep>> overReach, TransactionViewModel endpoint, HashMap<Hash, PathRef> tangleView) throws Exception {
-        long minimumTimestamp = endpoint.getTimestamp();
+        long minimumTimestamp = endpoint.getLowestTimestamp();
         long txCount = 0;
         long overReachCount = 0;
 //        try {
@@ -145,11 +145,11 @@ public class LazyAStarPathfinding implements Pathfinding {
                     for (int i = 0; i < 2; i++) {
                         TransactionViewModel branchOrTrunk = branchAndTrunk[i];
                         branchOrTrunk.setMetadata();
-                        if (branchOrTrunk.getTimestamp() > 0) {
+                        if (branchOrTrunk.getLowestTimestamp() > 0) {
                             SortedMap<Long, List<ApproveeStep>> queueReference =
-                                    (branchOrTrunk.getTimestamp() > (minimumTimestamp-300) ? callQueue : overReach);
+                                    (branchOrTrunk.getLowestTimestamp() > (minimumTimestamp-300) ? callQueue : overReach);
                             //if(branchOrTrunk.getTimestamp() > (minimumTimestamp-300) ){
-                                System.out.println(branchOrTrunk.getHash().toString() + " " + branchOrTrunk.getTimestamp() + " " + minimumTimestamp + " " + (branchOrTrunk.getTimestamp() - minimumTimestamp));
+                              //  System.out.println(branchOrTrunk.getHash().toString() + " " + branchOrTrunk.getLowestTimestamp() + " " + minimumTimestamp + " " + (branchOrTrunk.getLowestTimestamp() - minimumTimestamp));
                            // }
 
                             if (!tangleView.containsKey(branchOrTrunk.getHash())) {
@@ -158,9 +158,9 @@ public class LazyAStarPathfinding implements Pathfinding {
                                         i == 0 ? 'b' : 't', //here we use the index to put back the trunk or branch information
                                         branchOrTrunk.getBranchTransactionHash(), branchOrTrunk.getTrunkTransactionHash(), currentStep + 1));
                                 //calculate the timestamp based difference between transactions
-                                long timewarpDistance = tvm.getTimestamp() - branchOrTrunk.getTimestamp();
+                                long timewarpDistance = tvm.getLowestTimestamp() - branchOrTrunk.getLowestTimestamp();
                                 //assume the same distance is travelled on the same path(either branch or trunk).
-                                long projectedCallqueue = branchOrTrunk.getTimestamp() - timewarpDistance;
+                                long projectedCallqueue = branchOrTrunk.getLowestTimestamp() - timewarpDistance;
                                 if (queueReference.containsKey(projectedCallqueue)) {
                                     queueReference.get(projectedCallqueue).add(new ApproveeStep(branchOrTrunk, tvm.getHash(), currentStep + 1));//When it already exists we just append to the existing list.
                                 } else {
